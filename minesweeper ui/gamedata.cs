@@ -77,7 +77,7 @@ namespace minesweeper_ui
             if (countgrey + countimage == Global.GlobalInts[0] * Global.GlobalInts[1] && Global.outputwin == true) //checks if user has win
             {
                 Global.outputwin = false; //was having an issue where this message box would appear 50 times, so this makes sure it only displays once
-                MessageBox.Show("Win! Guesses: " +  Global.guesses.ToString()); //displays win
+                MessageBox.Show("Win! Guesses: " + Global.guesses.ToString()); //displays win
                 Environment.Exit(0); //closes all
             }
         }

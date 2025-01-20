@@ -56,7 +56,7 @@ namespace minesweeper_ui //do 1-1 edge logic
                     if (exit) { break; }
                 }
                 //call furtherdet here
-                if (!exit && !won()) { if (furtherdet()) { awfuckwegottaguess(); } else { await Task.Delay(3000); } }//if we cant play a guranteed room, we guess ----- CALL SEARCH HERE
+                if (!exit && !won()) { if (furtherdet()) { awfuckwegottaguess(); }}//if we cant play a guranteed room, we guess ----- CALL SEARCH HERE
                 await Task.Delay(5);
             }
             

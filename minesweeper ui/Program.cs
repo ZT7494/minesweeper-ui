@@ -82,7 +82,6 @@ namespace minesweeper_ui
             get { return g; }
             set { g = value; }
         }
-
     }
 
     internal static class Program
@@ -257,7 +256,7 @@ namespace minesweeper_ui
                 {
                     cur.Image = Global.getmine;
                     Global.botrunning = false;
-                    MessageBox.Show("You Hit a mine. Guesses: " +  Global.guesses.ToString());
+                    MessageBox.Show("You Hit a mine. Guesses: " + Global.guesses.ToString());
                     Environment.Exit(0);
                 }
                 neighbours(cur); //calls neighbours which then handles the logic
@@ -335,7 +334,8 @@ namespace minesweeper_ui
             mineimg = mineimg.GetThumbnailImage(30, 30, null, IntPtr.Zero);
             Global.getmine = mineimg;
 
-            Application.Run(new StartMenu()); //runs main form
+            //Application.Run(new StartMenu()); //runs main form
+            Global.GlobalVar = "Hard";
             string diff = Global.GlobalVar; //makes difficulty global
             makeboard(diff); //creates board
         }
