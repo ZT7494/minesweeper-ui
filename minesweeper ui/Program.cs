@@ -322,13 +322,13 @@ namespace minesweeper_ui
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Image flag = Image.FromFile("C:\\Users\\Zack Thompson\\Pictures\\flag.png"); //pulls and resizes flag image from files, then makes it global
+            Image flag = Image.FromFile("C:\\Users\\ZACKT\\Pictures\\flag.png"); //pulls and resizes flag image from files, then makes it global
             //laptop: "C:\\Users\\ZACKT\\Pictures\\flag.png"
             //home: ""C:\\Users\\Zack Thompson\\Pictures\\flag.png"
             flag = flag.GetThumbnailImage(30,30,null,IntPtr.Zero);
             Global.getflag = flag; 
 
-            Image mineimg = Image.FromFile("C:\\Users\\Zack Thompson\\Pictures\\mine.png");//pulls and resizes mine image from files, then makes it global
+            Image mineimg = Image.FromFile("C:\\Users\\ZACKT\\Pictures\\mine.png");//pulls and resizes mine image from files, then makes it global
             //laptop: "C:\\Users\\ZACKT\\Pictures\\mine.png"
             //home: "C:\\Users\\Zack Thompson\\Pictures\\mine.png"
             mineimg = mineimg.GetThumbnailImage(30, 30, null, IntPtr.Zero);

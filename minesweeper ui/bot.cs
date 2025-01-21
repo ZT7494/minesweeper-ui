@@ -66,6 +66,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             bool next = !oto(); //if one two one is found, next = false so no continue
             if (next) { next = !otto(); }
             if (next) { next = !ooe(); }
+            if (next) { next = !ote(); }
             return next;
         }
         private static void pressall(Button b, string action) // click all hidden tiles around a specific tile with a specific action (reveal or flag)
@@ -349,5 +350,50 @@ namespace minesweeper_ui //do 1-1 edge logic
             }
             return false;
         }
+
+        private static bool ote()//one two edge pattern
+        {
+            Button[,] board = Global.GlobalBoard;
+            int bxr = Global.GlobalInts[0] - 1; //gets the last x row
+            int byr = Global.GlobalInts[1] - 1; //gets the last y row
+            for (int i = 1; i < Global.GlobalInts[0] - 1; i++)
+            {
+                if (board[i, 0].Text == "" || board[i, 1].Text == "") { continue; }
+                if (Convert.ToInt32(board[i, 0].Text) - getdata(board[i, 0], "flags") == 1 && Convert.ToInt32(board[i, 1].Text) - getdata(board[i, 1], "flags") == 2) //top row one one check
+                {
+                    if (board[i + 1, 0].BackColor == Color.White && board[i + 1, 1].BackColor == Color.White && board[i + 1, 2].BackColor == Color.White && board[i + 1, 2].Image == null) { press(board[i + 1, 2], "r"); return true; }
+                    if (board[i - 1, 0].BackColor == Color.White && board[i - 1, 1].BackColor == Color.White && board[i - 1, 2].BackColor == Color.White && board[i - 1, 2].Image == null) { press(board[i - 1, 2], "r"); return true; }
+                }
+            }
+            for (int i = 1; i < Global.GlobalInts[0] - 1; i++)
+            {
+                if (board[i, byr].Text == "" || board[i, byr - 1].Text == "") { continue; }
+                if (Convert.ToInt32(board[i, byr].Text) - getdata(board[i, byr], "flags") == 1 && Convert.ToInt32(board[i, byr - 1].Text) - getdata(board[i, byr - 1], "flags") == 2) //bottom row
+                {
+                    if (board[i + 1, byr].BackColor == Color.White && board[i + 1, byr - 1].BackColor == Color.White && board[i + 1, byr - 2].BackColor == Color.White && board[i + 1, byr - 2].Image == null) { press(board[i + 1, byr - 2], "r"); return true; }
+                    if (board[i - 1, byr].BackColor == Color.White && board[i - 1, byr - 1].BackColor == Color.White && board[i - 1, byr - 2].BackColor == Color.White && board[i - 1, byr - 2].Image == null) { press(board[i - 1, byr - 2], "r"); return true; }
+                }
+            }
+            for (int i = 1; i < Global.GlobalInts[1] - 1; i++)
+            {
+                if (board[0, i].Text == "" || board[1, i].Text == "") { continue; }
+                if (Convert.ToInt32(board[0, i].Text) - getdata(board[0, i], "flags") == 1 && Convert.ToInt32(board[1, i].Text) - getdata(board[1, i], "flags") == 2) //checks pattern on first y row
+                {
+                    if (board[0, i + 1].BackColor == Color.White && board[1, i + 1].BackColor == Color.White && board[2, i + 1].BackColor == Color.White && board[2, i + 1].Image == null) { press(board[2, i + 1], "r"); return true; }
+                    if (board[0, i - 1].BackColor == Color.White && board[1, i - 1].BackColor == Color.White && board[2, i - 1].BackColor == Color.White && board[2, i - 1].Image == null) { press(board[2, i - 1], "r"); return true; }
+                }
+            }
+            for (int i = 1; i < Global.GlobalInts[1] - 1; i++)
+            {
+                if (board[bxr, i].Text == "" || board[bxr - 1, i].Text == "") { continue; }
+                if (Convert.ToInt32(board[bxr, i].Text) - getdata(board[bxr, i], "flags") == 1 && Convert.ToInt32(board[bxr - 1, i].Text) - getdata(board[bxr - 1, i], "flags") == 2) //checks on final y row
+                {
+                    if (board[bxr, i + 1].BackColor == Color.White && board[bxr - 1, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].Image == null) { press(board[bxr - 2, i + 1], "r"); return true; }
+                    if (board[bxr, i - 1].BackColor == Color.White && board[bxr - 1, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].Image == null) { press(board[bxr - 2, i - 1], "r"); return true; }
+                }
+            }
+            return false;
+        }
     }
+
 }
