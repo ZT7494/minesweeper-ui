@@ -50,13 +50,12 @@ namespace minesweeper_ui //do 1-1 edge logic
                         {
                             if (N == F) { pressall(cur, "reveal"); Global.GlobalBoard = board; exit = true; break; } //if all neighbouring mines revealed, we can safely reveal all other nieghbours
                             if (H == N - F) { pressall(cur, "flag"); Global.GlobalBoard = board; exit = true; break; } // flags surrounding tiles if all unrevealed neighbours = number of surrounding mines
-                            if (cur.BackColor == Color.White && H == 0 && F > 0) { pressall(cur, "flag"); Global.GlobalBoard = board; exit = true; break; } //if surrounded by flags, reveal (this seems weird but fixes some cases which i found)
                         }
                     }
                     if (exit) { break; }
                 }
                 //call furtherdet here
-                if (!exit && !won()) { if (furtherdet()) { awfuckwegottaguess(); }}//if we cant play a guranteed room, we guess ----- CALL SEARCH HERE
+                if (!exit && !won()) { if (furtherdet()) { awfuckwegottaguess(); } else { await Task.Delay(5); } }//if we cant play a guranteed room, we guess ----- CALL SEARCH HERE
                 await Task.Delay(5);
             }
             
@@ -67,6 +66,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             if (next) { next = !otto(); }
             if (next) { next = !ooe(); }
             if (next) { next = !ote(); }
+            if (next) { next = !endgame(); }
             return next;
         }
         private static void pressall(Button b, string action) // click all hidden tiles around a specific tile with a specific action (reveal or flag)
@@ -390,6 +390,37 @@ namespace minesweeper_ui //do 1-1 edge logic
                 {
                     if (board[bxr, i + 1].BackColor == Color.White && board[bxr - 1, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].Image == null) { press(board[bxr - 2, i + 1], "r"); return true; }
                     if (board[bxr, i - 1].BackColor == Color.White && board[bxr - 1, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].Image == null) { press(board[bxr - 2, i - 1], "r"); return true; }
+                }
+            }
+            return false;
+        }
+
+        private static bool endgame()
+        {
+            List<Button> whites = new List<Button>();
+            Button[,] board = Global.GlobalBoard;
+            
+            for(int i = 0; i < Global.GlobalInts[0]; i++)
+            {
+                for(int i2 = 0; i2 < Global.GlobalInts[1]; i2++)
+                {
+                    if (board[i, i2].BackColor == Color.White && board[i, i2].Image == null) { whites.Add(board[i, i2]); }
+                }
+            }
+            foreach(Button b in whites) { MessageBox.Show(b.Name); }
+            if(Global.mines == whites.Count)
+            {
+                foreach(Button b in whites)
+                {
+                    press(b, "r"); return true;
+                }
+            }
+            
+            if(Global.mines == 0)
+            {
+                foreach(Button b in whites)
+                {
+                    press(b, "l"); return true;
                 }
             }
             return false;

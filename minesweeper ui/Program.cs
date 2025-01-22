@@ -234,6 +234,11 @@ namespace minesweeper_ui
                     j++; //increments. this is not done in the loop to ensure the right amount of mines are placed
                 }
             }
+            board[1, 1].Tag = new string[2] { "M", "" };
+            board[1, 0].Tag = new string[2] { "M", "" };
+            board[0, 1].Tag = new string[2] { "M", "" };
+            Global.mines = Global.mines + 3;
+
             Global.GlobalBoard = board; //redifines board with the mines
         }
         static void press(object sender, MouseEventArgs e) //code for each user click
@@ -344,7 +349,7 @@ namespace minesweeper_ui
             Global.getmine = mineimg;
 
             //Application.Run(new StartMenu()); //runs difficulty selecting form
-            Global.GlobalVar = "Hard";
+            Global.GlobalVar = "Medium";
             string diff = Global.GlobalVar; //makes difficulty global
             makeboard(diff); //creates board
         }
