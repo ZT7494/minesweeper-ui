@@ -1,5 +1,5 @@
 ﻿
-//bot is ran on line 315 if needed changing
+//bot is ran on line 315 if needed changing // debugging lines: 252, 212-4
 namespace minesweeper_ui
 {
     static class Global //stores data across forms instead of tracking parameters through 8 functions
@@ -209,7 +209,7 @@ namespace minesweeper_ui
             Random rnd = new Random();
             int rndone;
             int rndtwo;
-            for(int j = 0; j < Global.GlobalInts[2];) // for every mine
+            for (int j = 0; j < Global.GlobalInts[2];) // for every mine
             {
                 rndone = rnd.Next(0, board.GetLength(0));
                 rndtwo = rnd.Next(0, board.GetLength(1));
@@ -234,11 +234,6 @@ namespace minesweeper_ui
                     j++; //increments. this is not done in the loop to ensure the right amount of mines are placed
                 }
             }
-            board[1, 1].Tag = new string[2] { "M", "" };
-            board[1, 0].Tag = new string[2] { "M", "" };
-            board[0, 1].Tag = new string[2] { "M", "" };
-            Global.mines = Global.mines + 3;
-
             Global.GlobalBoard = board; //redifines board with the mines
         }
         static void press(object sender, MouseEventArgs e) //code for each user click
@@ -336,13 +331,13 @@ namespace minesweeper_ui
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Image flag = Image.FromFile("C:\\Users\\ZACKT\\Pictures\\flag.png"); //pulls and resizes flag image from files, then makes it global
+            Image flag = Image.FromFile("C:\\Users\\Zack Thompson\\Pictures\\flag.png"); //pulls and resizes flag image from files, then makes it global
             //laptop: "C:\\Users\\ZACKT\\Pictures\\flag.png"
             //home: ""C:\\Users\\Zack Thompson\\Pictures\\flag.png"
             flag = flag.GetThumbnailImage(30,30,null,IntPtr.Zero);
             Global.getflag = flag; 
 
-            Image mineimg = Image.FromFile("C:\\Users\\ZACKT\\Pictures\\mine.png");//pulls and resizes mine image from files, then makes it global
+            Image mineimg = Image.FromFile("C:\\Users\\Zack Thompson\\Pictures\\mine.png");//pulls and resizes mine image from files, then makes it global
             //laptop: "C:\\Users\\ZACKT\\Pictures\\mine.png"
             //home: "C:\\Users\\Zack Thompson\\Pictures\\mine.png"
             mineimg = mineimg.GetThumbnailImage(30, 30, null, IntPtr.Zero);

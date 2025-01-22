@@ -407,7 +407,7 @@ namespace minesweeper_ui //do 1-1 edge logic
                     if (board[i, i2].BackColor == Color.White && board[i, i2].Image == null) { whites.Add(board[i, i2]); }
                 }
             }
-            foreach(Button b in whites) { MessageBox.Show(b.Name); }
+            //foreach(Button b in whites) { MessageBox.Show(b.Name + "    " + Global.mines); }
             if(Global.mines == whites.Count)
             {
                 foreach(Button b in whites)
