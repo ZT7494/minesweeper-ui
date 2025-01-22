@@ -256,7 +256,16 @@ namespace minesweeper_ui
                 {
                     cur.Image = Global.getmine;
                     Global.botrunning = false;
-                    MessageBox.Show("You Hit a mine. Guesses: " + Global.guesses.ToString());
+                    //MessageBox.Show("You Hit a mine. Guesses: " + Global.guesses.ToString());
+                    string FileName = "winr.txt";
+                    TextReader TextReader = new StreamReader(FileName);
+                    int wins = Convert.ToInt32(TextReader.ReadLine());
+                    int attempts = Convert.ToInt32(TextReader.ReadLine());
+                    TextReader.Close();
+                    TextWriter TextWriter = new StreamWriter(FileName);
+                    TextWriter.WriteLine(wins);
+                    TextWriter.WriteLine(attempts + 1);
+                    TextWriter.Close();
                     Environment.Exit(0);
                 }
                 neighbours(cur); //calls neighbours which then handles the logic
@@ -334,7 +343,7 @@ namespace minesweeper_ui
             mineimg = mineimg.GetThumbnailImage(30, 30, null, IntPtr.Zero);
             Global.getmine = mineimg;
 
-            //Application.Run(new StartMenu()); //runs main form
+            //Application.Run(new StartMenu()); //runs difficulty selecting form
             Global.GlobalVar = "Hard";
             string diff = Global.GlobalVar; //makes difficulty global
             makeboard(diff); //creates board
