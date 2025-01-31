@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 namespace minesweeper_ui //do 1-1 edge logic
 {
     internal class bot
@@ -25,10 +25,11 @@ namespace minesweeper_ui //do 1-1 edge logic
         public async void Run() //main function for bot
         {
             await Task.Delay(2000); //waits for board to finish initializing
-            Point startpos = new Point(Global.startpos[0], Global.startpos[1]); //pulls the position of the top left corner cell from global (defined when making board)
-            Point firstmovepoint = new Point(startpos.X + Convert.ToInt32(Math.Round((decimal)Global.GlobalInts[0] / 2)) * 30, startpos.Y + Convert.ToInt32(Math.Round((decimal)Global.GlobalInts[1] / 2)) * 30); //centre of board
+            //Point startpos = new Point(Global.startpos[0], Global.startpos[1]); //pulls the position of the top left corner cell from global (defined when making board)
+            //Point firstmovepoint = new Point(startpos.X + Convert.ToInt32(Math.Round((decimal)Global.GlobalInts[0] / 2)) * 30, startpos.Y + Convert.ToInt32(Math.Round((decimal)Global.GlobalInts[1] / 2)) * 30); //centre of board
             Button[,] board = Global.GlobalBoard;
             press(board[Global.GlobalInts[0] / 2, Global.GlobalInts[1] / 2], "l"); //left clicks centre button
+            //press(board[1, 1], "l");
             await Task.Delay(100); // slight delay
 
             int F = 0; int N = 0; int H = 0; //initializes vars
@@ -44,8 +45,8 @@ namespace minesweeper_ui //do 1-1 edge logic
                         //basic definitons: N is the number on a revealed cell. F is the flagged cells around it. H is the hidden (unrevealed) cells
                         N = 0;
                         if (cur.Text != "") { N = Convert.ToInt32(cur.Text); }
-                        F = getdata(cur, "flags"); //gets amout of flags in surrounding cells
-                        H = getdata(cur, "hidden"); // gets amount of hidden/unrevealed  cells around it
+                        F = getdata(cur, "flags", Global.GlobalBoard); //gets amout of flags in surrounding cells
+                        H = getdata(cur, "hidden", Global.GlobalBoard); // gets amount of hidden/unrevealed  cells around it
                         if (cur.Text.ToString() != "" && H > 0) //dont do anything with revealed cells of 0, or with cells where all around are revealed/flagged
                         {
                             if (N == F) { pressall(cur, "reveal"); Global.GlobalBoard = board; exit = true; break; } //if all neighbouring mines revealed, we can safely reveal all other nieghbours
@@ -67,6 +68,8 @@ namespace minesweeper_ui //do 1-1 edge logic
             if (next) { next = !ooe(); }
             if (next) { next = !ote(); }
             if (next) { next = !endgame(); }
+            if (next) { betterguessing(); }
+
             return next;
         }
         private static void pressall(Button b, string action) // click all hidden tiles around a specific tile with a specific action (reveal or flag)
@@ -103,7 +106,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             if (lr == "l") { LeftClick(); }
         }
 
-        private static int getdata(Button b, string type) //gets surrounding flags or hidden tiles 
+        private static int getdata(Button b, string type, Button[,] lb) //gets surrounding flags or hidden tiles 
         {
             string name = b.Name;
             string[] namestr = name.Split(' ');
@@ -121,7 +124,7 @@ namespace minesweeper_ui //do 1-1 edge logic
                         int checky = i2 + y;
                         if (checkx >= 0 && checky >= 0 && checkx < Global.GlobalInts[0] && checky < Global.GlobalInts[1])
                         {
-                            if (((string[])Global.GlobalBoard[i + x, i2 + y].Tag)[1] == "F")
+                            if (((string[])lb[i + x, i2 + y].Tag)[1] == "F")
                             {
                                 flags++;
                             }
@@ -143,7 +146,7 @@ namespace minesweeper_ui //do 1-1 edge logic
                         int checky = i2 + y;
                         if (checkx >= 0 && checky >= 0 && checkx < Global.GlobalInts[0] && checky < Global.GlobalInts[1])
                         {
-                            if (((string[])Global.GlobalBoard[i + x, i2 + y].Tag)[1] != "F" && Global.GlobalBoard[i + x, i2 + y].BackColor == Color.White)
+                            if (((string[])lb[i + x, i2 + y].Tag)[1] != "F" && lb[i + x, i2 + y].BackColor == Color.White)
                             {
                                 unrev++;
                             }
@@ -213,7 +216,22 @@ namespace minesweeper_ui //do 1-1 edge logic
                     }
                 }
             }
-            if (best != null) { press(best, "l"); } //left clicks our selected tile 
+            if (best.Name != "") { press(best, "l"); } //left clicks our selected tile 
+            else
+            {
+                //MessageBox.Show("Debug - no move");
+                for(int i = 0; i < Global.GlobalInts[0]; i++)
+                {
+                    for(int i2 = 0; i2 < Global.GlobalInts[1]; i2++)
+                    {
+                        if (board[i, i2].BackColor == Color.White && board[i, i2].Image == null)
+                        {
+                            press(board[i, i2], "l");
+                            break;
+                        }
+                    }
+                }
+            }
             return 0;
         } //main logic for guessing
         private static int[] largestN(int i, int i2) //calculates data for calculating probability
@@ -236,7 +254,7 @@ namespace minesweeper_ui //do 1-1 edge logic
                     }
                 }
             }
-            values = [biggestN, getdata(sb, "flags"), getdata(sb, "hidden")];
+            values = [biggestN, getdata(sb, "flags", Global.GlobalBoard), getdata(sb, "hidden", Global.GlobalBoard)];
             return values;
         }
         private static bool oto()
@@ -247,9 +265,9 @@ namespace minesweeper_ui //do 1-1 edge logic
                 for (int i2 = 1; i2 < Global.GlobalInts[1] - 1; i2++) //we dont check the bottom or top row as i think future logic will do this better
                 {
                     checks = true;
-                    if (getdata(board[i, i2], "hidden") == 0) { break; } //checks if we need to implement complex logic on that tile
+                    if (getdata(board[i, i2], "hidden", Global.GlobalBoard) == 0) { break; } //checks if we need to implement complex logic on that tile
                     for (int mod = 0; mod < 3; mod++) { Button cur = board[i + mod, i2]; if (cur.BackColor == Color.White || cur.Text == "" || cur.Image != null) { checks = false; break; } }//means we skip over if we dont have enough info on the current tiles
-                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i,i2], "flags") == 1 && Convert.ToInt32(board[i + 1, i2].Text) - getdata(board[i+1, i2], "flags") == 2 && Convert.ToInt32(board[i + 2, i2].Text) - getdata(board[i+2, i2], "flags") == 1)
+                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i,i2], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i + 1, i2].Text) - getdata(board[i+1, i2], "flags", Global.GlobalBoard) == 2 && Convert.ToInt32(board[i + 2, i2].Text) - getdata(board[i+2, i2], "flags", Global.GlobalBoard) == 1)
                     {
                         if (board[i, i2 + 1].BackColor == Color.White && board[i + 1, i2 + 1].BackColor == Color.White && board[i + 2, i2 + 1].BackColor == Color.White) { press(board[i, i2 + 1], "r"); press(board[i + 2, i2 + 1], "r"); return true; } //checks above horiz one two one and clicks the known tiles
                         if (board[i, i2 - 1].BackColor == Color.White && board[i + 1, i2 - 1].BackColor == Color.White && board[i + 2, i2 - 1].BackColor == Color.White) { press(board[i, i2 - 1], "r"); press(board[i + 2, i2 - 1], "r"); return true; }//as above, checks below
@@ -261,9 +279,9 @@ namespace minesweeper_ui //do 1-1 edge logic
                 for (int i2 = 0; i2 < Global.GlobalInts[1] - 2; i2++)
                 {
                     checks = true;
-                    if (getdata(board[i, i2], "hidden") == 0) { break; } //checks if we need to implement complex logic on that tile
+                    if (getdata(board[i, i2], "hidden", Global.GlobalBoard) == 0) { break; } //checks if we need to implement complex logic on that tile
                     for (int mod = 0; mod < 3; mod++) { Button cur = board[i, i2 + mod]; if (cur.BackColor == Color.White || cur.Text == "" || cur.Image != null) { checks = false; continue; } }
-                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i, i2], "flags") == 1 && Convert.ToInt32(board[i, i2 + 1].Text) - getdata(board[i, i2 + 1], "flags") == 2 && Convert.ToInt32(board[i, i2 + 2].Text) - getdata(board[i, i2 + 2], "flags") == 1)
+                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i, i2], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i, i2 + 1].Text) - getdata(board[i, i2 + 1], "flags", Global.GlobalBoard) == 2 && Convert.ToInt32(board[i, i2 + 2].Text) - getdata(board[i, i2 + 2], "flags", Global.GlobalBoard) == 1)
                     {
                         if (board[i + 1, i2].BackColor == Color.White && board[i + 1, i2 + 1].BackColor == Color.White && board[i + 1, i2 + 2].BackColor == Color.White) { press(board[i + 1, i2], "r"); press(board[i + 1, i2 + 2], "r"); return true; }//as above, for vertical 
                         if (board[i - 1, i2].BackColor == Color.White && board[i - 1, i2 + 1].BackColor == Color.White && board[i - 1, i2 + 2].BackColor == Color.White) { press(board[i - 1, i2], "r"); press(board[i - 1, i2 + 2], "r"); return true; }
@@ -281,9 +299,9 @@ namespace minesweeper_ui //do 1-1 edge logic
                 for (int i2 = 1; i2 < Global.GlobalInts[1] - 1; i2++)
                 {
                     checks = true;
-                    if (getdata(board[i, i2], "hidden") == 0) { break; } //checks if we need to implement complex logic on that tile
+                    if (getdata(board[i, i2], "hidden", Global.GlobalBoard) == 0) { break; } //checks if we need to implement complex logic on that tile
                     for (int mod = 0; mod < 4; mod++) { Button cur = board[i + mod, i2]; if (cur.BackColor == Color.White || cur.Text == "" || cur.Image != null) { checks = false; break; } }//means we skip over if we dont have enough info on the current tiles
-                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i, i2], "flags") == 1 && Convert.ToInt32(board[i + 1, i2].Text) - getdata(board[i+1, i2], "flags") == 2 && Convert.ToInt32(board[i + 2, i2].Text) - getdata(board[i+2, i2], "flags") == 2 && Convert.ToInt32(board[i+3, i2].Text) - getdata(board[i+3, i2], "flags") == 1)
+                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i, i2], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i + 1, i2].Text) - getdata(board[i+1, i2], "flags", Global.GlobalBoard) == 2 && Convert.ToInt32(board[i + 2, i2].Text) - getdata(board[i+2, i2], "flags", Global.GlobalBoard) == 2 && Convert.ToInt32(board[i+3, i2].Text) - getdata(board[i+3, i2], "flags", Global.GlobalBoard) == 1)
                     {
                         if (board[i, i2 + 1].BackColor == Color.White && board[i + 1, i2 + 1].BackColor == Color.White && board[i + 2, i2 + 1].BackColor == Color.White && board[i + 3, i2 + 1].BackColor == Color.White) { press(board[i + 1, i2 + 1], "r"); press(board[i + 2, i2 + 1], "r"); return true; }
                         if (board[i, i2 - 1].BackColor == Color.White && board[i + 1, i2 - 1].BackColor == Color.White && board[i + 2, i2 - 1].BackColor == Color.White && board[i + 3, i2 - 1].BackColor == Color.White) { press(board[i + 1, i2 - 1], "r"); press(board[i + 2, i2 - 1], "r"); return true; }
@@ -295,9 +313,9 @@ namespace minesweeper_ui //do 1-1 edge logic
                 for (int i2 = 0; i2 < Global.GlobalInts[1] - 3; i2++)
                 {
                     checks = true;
-                    if (getdata(board[i, i2], "hidden") == 0) { break; } //checks if we need to implement complex logic on that tile
+                    if (getdata(board[i, i2], "hidden", Global.GlobalBoard) == 0) { break; } //checks if we need to implement complex logic on that tile
                     for (int mod = 0; mod < 4; mod++) { Button cur = board[i, i2 + mod]; if (cur.BackColor == Color.White || cur.Text == "" || cur.Image != null) { checks = false; continue; } }
-                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i, i2], "flags") == 1 && Convert.ToInt32(board[i, i2 + 1].Text) - getdata(board[i, i2+1], "flags") == 2 && Convert.ToInt32(board[i, i2 + 2].Text) - getdata(board[i, i2+2], "flags") == 2 && Convert.ToInt32(board[i, i2 + 3].Text) - getdata(board[i, i2 + 3], "flags") == 1)
+                    if (checks && Convert.ToInt32(board[i, i2].Text) - getdata(board[i, i2], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i, i2 + 1].Text) - getdata(board[i, i2+1], "flags", Global.GlobalBoard) == 2 && Convert.ToInt32(board[i, i2 + 2].Text) - getdata(board[i, i2+2], "flags", Global.GlobalBoard) == 2 && Convert.ToInt32(board[i, i2 + 3].Text) - getdata(board[i, i2 + 3], "flags", Global.GlobalBoard) == 1)
                     {
                         if (board[i + 1, i2].BackColor == Color.White && board[i + 1, i2 + 1].BackColor == Color.White && board[i + 1, i2 + 2].BackColor == Color.White && board[i + 1, i2 + 3].BackColor == Color.White) { press(board[i + 1, i2 + 1], "r"); press(board[i + 1, i2 + 2], "r"); return true; }//as above, for vertical 
                         if (board[i - 1, i2].BackColor == Color.White && board[i - 1, i2 + 1].BackColor == Color.White && board[i - 1, i2 + 2].BackColor == Color.White && board[i - 1, i2 + 3].BackColor == Color.White) { press(board[i - 1, i2 + 1], "r"); press(board[i - 1, i2 + 2], "r"); return true; }
@@ -315,7 +333,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for(int i = 1; i < Global.GlobalInts[0]-1; i++)
             {
                 if (board[i, 0].Text == "" || board[i, 1].Text == "") { continue; }
-                if (Convert.ToInt32(board[i, 0].Text) - getdata(board[i, 0], "flags") == 1 && Convert.ToInt32(board[i, 1].Text) - getdata(board[i, 1], "flags") == 1) //top row one one check
+                if (Convert.ToInt32(board[i, 0].Text) - getdata(board[i, 0], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i, 1].Text) - getdata(board[i, 1], "flags", Global.GlobalBoard) == 1) //top row one one check
                 {
                     if (board[i + 1, 0].BackColor == Color.White && board[i + 1, 1].BackColor == Color.White && board[i + 1, 2].BackColor == Color.White && board[i + 1, 2].Image == null) { press(board[i + 1, 2], "l"); return true; }
                     if (board[i - 1, 0].BackColor == Color.White && board[i - 1, 1].BackColor == Color.White && board[i - 1, 2].BackColor == Color.White && board[i - 1, 2].Image == null) { press(board[i - 1, 2], "l"); return true; }
@@ -324,7 +342,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for(int i = 1; i < Global.GlobalInts[0] - 1; i++)
             {
                 if (board[i, byr].Text == "" || board[i, byr - 1].Text == "") { continue; }
-                if (Convert.ToInt32(board[i, byr].Text) - getdata(board[i, byr], "flags") == 1 && Convert.ToInt32(board[i, byr - 1].Text) - getdata(board[i, byr - 1], "flags") == 1) //bottom row
+                if (Convert.ToInt32(board[i, byr].Text) - getdata(board[i, byr], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i, byr - 1].Text) - getdata(board[i, byr - 1], "flags", Global.GlobalBoard) == 1) //bottom row
                 {
                     if (board[i + 1, byr].BackColor == Color.White && board[i + 1, byr - 1].BackColor == Color.White && board[i + 1, byr - 2].BackColor == Color.White && board[i + 1, byr - 2].Image == null) { press(board[i + 1, byr - 2], "l"); return true; }
                     if (board[i - 1, byr].BackColor == Color.White && board[i - 1, byr - 1].BackColor == Color.White && board[i - 1, byr - 2].BackColor == Color.White && board[i - 1, byr - 2].Image == null) { press(board[i - 1, byr - 2], "l"); return true; }
@@ -333,7 +351,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for(int i = 1; i < Global.GlobalInts[1] - 1; i++)
             {
                 if (board[0, i].Text == "" || board[1, i].Text == "") { continue; }
-                if (Convert.ToInt32(board[0, i].Text) - getdata(board[0, i], "flags") == 1 && Convert.ToInt32(board[1, i].Text) - getdata(board[1, i], "flags") == 1) //checks pattern on first y row
+                if (Convert.ToInt32(board[0, i].Text) - getdata(board[0, i], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[1, i].Text) - getdata(board[1, i], "flags", Global.GlobalBoard) == 1) //checks pattern on first y row
                 {
                     if (board[0, i + 1].BackColor == Color.White && board[1, i + 1].BackColor == Color.White && board[2, i + 1].BackColor == Color.White && board[2, i + 1].Image == null) { press(board[2, i + 1], "l"); return true; }
                     if (board[0, i - 1].BackColor == Color.White && board[1, i - 1].BackColor == Color.White && board[2, i - 1].BackColor == Color.White && board[2, i - 1].Image == null) { press(board[2, i - 1], "l"); return true; }
@@ -342,7 +360,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for(int i = 1; i < Global.GlobalInts[1] - 1; i++)
             {
                 if (board[bxr, i].Text == "" || board[bxr - 1, i].Text == "") { continue; }
-                if (Convert.ToInt32(board[bxr, i].Text) - getdata(board[bxr, i], "flags") == 1 && Convert.ToInt32(board[bxr - 1, i].Text) - getdata(board[bxr - 1, i], "flags") == 1) //checks on final y row
+                if (Convert.ToInt32(board[bxr, i].Text) - getdata(board[bxr, i], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[bxr - 1, i].Text) - getdata(board[bxr - 1, i], "flags", Global.GlobalBoard) == 1) //checks on final y row
                 {
                     if (board[bxr, i + 1].BackColor == Color.White && board[bxr - 1, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].Image == null) { press(board[bxr - 2, i + 1], "l"); return true; }
                     if (board[bxr, i - 1].BackColor == Color.White && board[bxr - 1, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].Image == null) { press(board[bxr - 2, i - 1], "l"); return true; }
@@ -359,7 +377,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for (int i = 1; i < Global.GlobalInts[0] - 1; i++)
             {
                 if (board[i, 0].Text == "" || board[i, 1].Text == "") { continue; }
-                if (Convert.ToInt32(board[i, 0].Text) - getdata(board[i, 0], "flags") == 1 && Convert.ToInt32(board[i, 1].Text) - getdata(board[i, 1], "flags") == 2) //top row one one check
+                if (Convert.ToInt32(board[i, 0].Text) - getdata(board[i, 0], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i, 1].Text) - getdata(board[i, 1], "flags", Global.GlobalBoard) == 2) //top row one one check
                 {
                     if (board[i + 1, 0].BackColor == Color.White && board[i + 1, 1].BackColor == Color.White && board[i + 1, 2].BackColor == Color.White && board[i + 1, 2].Image == null) { press(board[i + 1, 2], "r"); return true; }
                     if (board[i - 1, 0].BackColor == Color.White && board[i - 1, 1].BackColor == Color.White && board[i - 1, 2].BackColor == Color.White && board[i - 1, 2].Image == null) { press(board[i - 1, 2], "r"); return true; }
@@ -368,7 +386,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for (int i = 1; i < Global.GlobalInts[0] - 1; i++)
             {
                 if (board[i, byr].Text == "" || board[i, byr - 1].Text == "") { continue; }
-                if (Convert.ToInt32(board[i, byr].Text) - getdata(board[i, byr], "flags") == 1 && Convert.ToInt32(board[i, byr - 1].Text) - getdata(board[i, byr - 1], "flags") == 2) //bottom row
+                if (Convert.ToInt32(board[i, byr].Text) - getdata(board[i, byr], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[i, byr - 1].Text) - getdata(board[i, byr - 1], "flags", Global.GlobalBoard) == 2) //bottom row
                 {
                     if (board[i + 1, byr].BackColor == Color.White && board[i + 1, byr - 1].BackColor == Color.White && board[i + 1, byr - 2].BackColor == Color.White && board[i + 1, byr - 2].Image == null) { press(board[i + 1, byr - 2], "r"); return true; }
                     if (board[i - 1, byr].BackColor == Color.White && board[i - 1, byr - 1].BackColor == Color.White && board[i - 1, byr - 2].BackColor == Color.White && board[i - 1, byr - 2].Image == null) { press(board[i - 1, byr - 2], "r"); return true; }
@@ -377,7 +395,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for (int i = 1; i < Global.GlobalInts[1] - 1; i++)
             {
                 if (board[0, i].Text == "" || board[1, i].Text == "") { continue; }
-                if (Convert.ToInt32(board[0, i].Text) - getdata(board[0, i], "flags") == 1 && Convert.ToInt32(board[1, i].Text) - getdata(board[1, i], "flags") == 2) //checks pattern on first y row
+                if (Convert.ToInt32(board[0, i].Text) - getdata(board[0, i], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[1, i].Text) - getdata(board[1, i], "flags", Global.GlobalBoard) == 2) //checks pattern on first y row
                 {
                     if (board[0, i + 1].BackColor == Color.White && board[1, i + 1].BackColor == Color.White && board[2, i + 1].BackColor == Color.White && board[2, i + 1].Image == null) { press(board[2, i + 1], "r"); return true; }
                     if (board[0, i - 1].BackColor == Color.White && board[1, i - 1].BackColor == Color.White && board[2, i - 1].BackColor == Color.White && board[2, i - 1].Image == null) { press(board[2, i - 1], "r"); return true; }
@@ -386,7 +404,7 @@ namespace minesweeper_ui //do 1-1 edge logic
             for (int i = 1; i < Global.GlobalInts[1] - 1; i++)
             {
                 if (board[bxr, i].Text == "" || board[bxr - 1, i].Text == "") { continue; }
-                if (Convert.ToInt32(board[bxr, i].Text) - getdata(board[bxr, i], "flags") == 1 && Convert.ToInt32(board[bxr - 1, i].Text) - getdata(board[bxr - 1, i], "flags") == 2) //checks on final y row
+                if (Convert.ToInt32(board[bxr, i].Text) - getdata(board[bxr, i], "flags", Global.GlobalBoard) == 1 && Convert.ToInt32(board[bxr - 1, i].Text) - getdata(board[bxr - 1, i], "flags", Global.GlobalBoard) == 2) //checks on final y row
                 {
                     if (board[bxr, i + 1].BackColor == Color.White && board[bxr - 1, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].BackColor == Color.White && board[bxr - 2, i + 1].Image == null) { press(board[bxr - 2, i + 1], "r"); return true; }
                     if (board[bxr, i - 1].BackColor == Color.White && board[bxr - 1, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].BackColor == Color.White && board[bxr - 2, i - 1].Image == null) { press(board[bxr - 2, i - 1], "r"); return true; }
@@ -424,6 +442,157 @@ namespace minesweeper_ui //do 1-1 edge logic
                 }
             }
             return false;
+        }
+
+        private static void betterguessing()
+        {
+            //iterate through board, find all unrevealed tiles with no information on them
+            //working on generating many configurations of possible board states. getting tiles hidden around each edge peice and randomly placing tiles into them
+            Button[,] tmpboard = DeepClone(Global.GlobalBoard); //clones board (not as a pointer but as a fresh arr so we can mess around without screwing global arr)
+            List<Button> tiles = new List<Button>();
+            Random rnd = new Random();
+            for (int i = 0; i < Global.GlobalInts[0]; i++)
+            {
+                for (int i2 = 0; i2 < Global.GlobalInts[1]; i2++)
+                {
+                    if (tmpboard[i, i2].BackColor == Color.Gray && tmpboard[i, i2].Image == null && tmpboard[i, i2].Text!="" && getdata(tmpboard[i,i2], "hidden", tmpboard) > 0)
+                    {
+                        tiles.Add(tmpboard[i, i2]); //collects all tiles with unrevealed tiles around it, and that we have a number for
+                    }
+                }
+            }
+            //start from 1 thing. do all combis in that. foreach of those combis, clone board and do combis in there
+            Button start = tiles[0];
+            List<Button> hiddenAround = gethiddensur(start, tmpboard);
+            int requiredMines = Convert.ToInt32(start.Text) - getdata(start, "flags", tmpboard); // Mines to place around this tile
+            List<List<Button>> placements = GenerateMinePlacements(hiddenAround, requiredMines);
+            List<List<Button>> combis = loop(tmpboard, tiles, placements);
+            testout(combis);
+        }
+        private static List<List<Button>> loop(Button[,] tmpboard, List<Button> tiles, List<List<Button>> placements)//this works but recursion depth.....
+        {
+            MessageBox.Show("loop called");
+            foreach (List<Button> curcombi in placements)
+            {
+                Button[,] tmpboard1 = DeepClone(tmpboard);//clone tmpb
+                placemines(curcombi, tmpboard1);//placemines
+                List<Button> tiles1 = new List<Button>(tiles);
+                tiles1.RemoveAt(0);
+                if (tiles1.Count == 0) { return placements; }
+                foreach (Button b in tiles1)
+                {
+                    List<Button> hiddenAround = gethiddensur(b, tmpboard1);
+                    int requiredMines = Convert.ToInt32(b.Text) - getdata(b, "flags", tmpboard1); // Mines to place around this tile
+                    placements = GenerateMinePlacements(hiddenAround, requiredMines);
+                    loop(tmpboard1, tiles1, placements);
+                }
+            }
+            return placements;
+        }
+        private static Button[,] placemines(List<Button> placements, Button[,] lb) //places mines on a specific board passed into func
+        {
+
+            foreach (Button c in placements)
+            {
+                string name = c.Name;
+                string[] namestr = name.Split(' ');
+                int i = Convert.ToInt32(namestr[0]);
+                int i2 = Convert.ToInt32(namestr[1]);
+                lb[i, i2].Image = Global.getflag;
+            }
+            
+            return lb;
+        }
+        private static void testout(List<List<Button>> list) //test print
+        {
+            foreach(List<Button> blist in list)
+            {
+                MessageBox.Show("New Combi");
+                foreach (Button b in blist)
+                {
+                    MessageBox.Show(b.Name);
+                }
+            }
+        }
+        private static List<List<Button>> GenerateMinePlacements(List<Button> hiddenAround, int numMines) //main for genning mine placements
+        {
+            List<List<Button>> minePlacements = new List<List<Button>>();
+            IEnumerable<IEnumerable<int>> combinations = GetCombinations(Enumerable.Range(0, hiddenAround.Count), numMines);
+
+            foreach (var combination in combinations)
+            {
+                List<Button> placement = new List<Button>();
+                foreach (int index in combination)
+                {
+                    placement.Add(hiddenAround[index]); // Map indices to the actual buttons
+                }
+                minePlacements.Add(placement);
+            }
+            return minePlacements;
+        }
+
+        // Helper function to generate combinations
+        public static IEnumerable<IEnumerable<T>> GetCombinations<T>(IEnumerable<T> list, int length)
+        {
+            if (length == 0)
+                return new[] { new T[0] };
+
+            return list.SelectMany((item, index) =>
+                GetCombinations(list.Skip(index + 1), length - 1).Select(result => new[] { item }.Concat(result)));
+        }
+
+
+        private static List<Button> gethiddensur(Button b, Button[,] lb) //gets a list of hidden tiles around a tile
+        {
+            List<Button> retlist = new List<Button>();
+            string name = b.Name;
+            string[] namestr = name.Split(' ');
+            int i = Convert.ToInt32(namestr[0]);
+            int i2 = Convert.ToInt32(namestr[1]);
+            for (int x = -1; x <= 1; x++) //x+- var
+            {
+                for (int y = -1; y <= 1; y++) //y+- var
+                {
+                    if (x == 0 && y == 0) { continue; }
+                    //if not flagged and no number
+                    int checkx = i + x; //gets index to check
+                    int checky = i2 + y;
+                    if (checkx >= 0 && checky >= 0 && checkx < Global.GlobalInts[0] && checky < Global.GlobalInts[1])
+                    {
+                        if (((string[])lb[i + x, i2 + y].Tag)[1] != "F" && lb[i + x, i2 + y].BackColor == Color.White)
+                        {
+                            retlist.Add(lb[i + x, i2 + y]);
+                        }
+                    }
+                }
+            }
+            return retlist;
+        }
+        private static Button[,] DeepClone(Button[,] originalBoard)
+        {
+            int rows = originalBoard.GetLength(0);
+            int cols = originalBoard.GetLength(1);
+
+            Button[,] clonedBoard = new Button[rows, cols];
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    Button originalButton = originalBoard[i, j];
+                    Button newButton = new Button
+                    {
+                        Name = originalButton.Name,
+                        BackColor = originalButton.BackColor,
+                        Image = originalButton.Image,
+                        Text = originalButton.Text,
+                        Tag = originalButton.Tag 
+                    };
+                    clonedBoard[i, j] = newButton;
+                }
+            }
+
+            return clonedBoard;
         }
     }
 
